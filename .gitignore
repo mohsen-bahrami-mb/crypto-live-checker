@@ -1,0 +1,25 @@
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments and env files
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# Pipenv lock (optional for local envs)
+Pipfile.lock
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+# Pipenv
+
+Pipfile.lock

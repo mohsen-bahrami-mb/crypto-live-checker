@@ -1,0 +1,4 @@
+"""Crypto price checker package."""
+
+__version__ = "1.0.0"
+
