@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.13']
     steps:
       - name: Checkout
@@ -29,6 +29,11 @@ jobs:
       - name: Install dependencies
         run: |
           pipenv install --dev --deploy || pipenv install --dev
+
+      - name: Ensure pywin32-ctypes on Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          pipenv run pip install pywin32-ctypes
 
       - name: Build with PyInstaller
         run: |
@@ -61,6 +66,12 @@ jobs:
           name: crypto-check-windows-latest
           path: release-artifacts/windows
 
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: crypto-check-macos-latest
+          path: release-artifacts/macos
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -89,4 +100,14 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: release-artifacts/linux/dist/crypto-check
           asset_name: crypto-check-${{ github.ref_name }}-linux
+          asset_content_type: application/octet-stream
+
+      - name: Upload macOS asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release-artifacts/macos/dist/crypto-check
+          asset_name: crypto-check-${{ github.ref_name }}-macos
           asset_content_type: application/octet-stream
