@@ -9,6 +9,8 @@ requests = "*"
 
 [dev-packages]
 pyinstaller = "*"
+pefile = "*"
+pywin32-ctypes = "*"
 
 [requires]
 python_version = "3.13"
