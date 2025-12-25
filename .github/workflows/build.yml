@@ -6,7 +6,6 @@ permissions:
 
 on:
   push:
-    branches: [main, master]
     tags: ['v*']
   workflow_dispatch:
 
@@ -61,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: crypto-check-${{ matrix.os }}
-          path: dist/*
+          path: dist
 
   release:
     name: Create GitHub Release (when tag pushed)
