@@ -1,0 +1,92 @@
+name: Build and release executables
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.13']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pipenv
+        run: python -m pip install --upgrade pip pipenv
+
+      - name: Install dependencies
+        run: |
+          pipenv install --dev --deploy || pipenv install --dev
+
+      - name: Build with PyInstaller
+        run: |
+          pipenv run pyinstaller main.py --onefile --name crypto-check
+
+      - name: List dist
+        run: ls -la dist || echo "no dist folder"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: crypto-check-${{ matrix.os }}
+          path: dist/*
+
+  release:
+    name: Create GitHub Release (when tag pushed)
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: crypto-check-ubuntu-latest
+          path: release-artifacts/linux
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: crypto-check-windows-latest
+          path: release-artifacts/windows
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: Automated build artifacts for ${{ github.ref_name }}
+
+      - name: Upload Windows asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release-artifacts/windows/dist/crypto-check.exe
+          asset_name: crypto-check-${{ github.ref_name }}-windows.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload Linux asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release-artifacts/linux/dist/crypto-check
+          asset_name: crypto-check-${{ github.ref_name }}-linux
+          asset_content_type: application/octet-stream
