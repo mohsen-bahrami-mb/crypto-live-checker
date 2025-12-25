@@ -46,7 +46,3 @@ python main.py
 - `src/crypto_checker.py` — crypto checking logic.
 - `src/__init__.py`
 
-## Development notes
-
-- Add dependencies to `Pipfile` or create a `requirements.txt` for pip installs.
-- Consider adding small tests and running them before commits.
