@@ -11,15 +11,32 @@ ENV/
 env/
 .env
 
-# Pipenv lock (optional for local envs)
-Pipfile.lock
-
 # Editor / IDE
 .vscode/
 .idea/
 
 # OS
 .DS_Store
-# Pipenv
 
-Pipfile.lock
+# Build / distribution artifacts
+build/
+dist/
+*.spec
+*.spec.json
+*.pyz
+
+# PyInstaller and packaging
+*.manifest
+*.exe
+
+# Python caches and test artifacts
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.cache/
+.coverage
+
+# Packaging
+*.egg-info/
+*.egg
+
