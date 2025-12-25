@@ -39,8 +39,19 @@ jobs:
         run: |
           pipenv run pyinstaller main.py --onefile --name crypto-check
 
-      - name: List dist
+      - name: List dist (non-Windows)
+        if: matrix.os != 'windows-latest'
         run: ls -la dist || echo "no dist folder"
+
+      - name: List dist (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          if (Test-Path -Path dist) {
+            Get-ChildItem -Path dist -Force
+          } else {
+            Write-Host "no dist folder"
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
