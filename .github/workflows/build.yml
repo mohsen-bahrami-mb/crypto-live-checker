@@ -86,6 +86,57 @@ jobs:
           name: crypto-check-macos-latest
           path: release-artifacts/macos
 
+      - name: Find Windows artifact
+        id: find_windows
+        run: |
+          if [ -d release-artifacts/windows/dist ]; then
+            file=$(find release-artifacts/windows/dist -type f -name "*.exe" | head -n1 || true)
+            if [ -z "$file" ]; then
+              echo "No Windows exe found in release-artifacts/windows/dist"
+              ls -R release-artifacts/windows || true
+              exit 1
+            fi
+            echo "asset_path=$file" >> $GITHUB_OUTPUT
+          else
+            echo "No release-artifacts/windows/dist folder"
+            ls -R release-artifacts || true
+            exit 1
+          fi
+
+      - name: Find Linux artifact
+        id: find_linux
+        run: |
+          if [ -d release-artifacts/linux/dist ]; then
+            file=$(find release-artifacts/linux/dist -maxdepth 1 -type f -name "crypto-check*" | head -n1 || true)
+            if [ -z "$file" ]; then
+              echo "No Linux binary found in release-artifacts/linux/dist"
+              ls -R release-artifacts/linux || true
+              exit 1
+            fi
+            echo "asset_path=$file" >> $GITHUB_OUTPUT
+          else
+            echo "No release-artifacts/linux/dist folder"
+            ls -R release-artifacts || true
+            exit 1
+          fi
+
+      - name: Find macOS artifact
+        id: find_macos
+        run: |
+          if [ -d release-artifacts/macos/dist ]; then
+            file=$(find release-artifacts/macos/dist -maxdepth 1 -type f -name "crypto-check*" | head -n1 || true)
+            if [ -z "$file" ]; then
+              echo "No macOS binary found in release-artifacts/macos/dist"
+              ls -R release-artifacts/macos || true
+              exit 1
+            fi
+            echo "asset_path=$file" >> $GITHUB_OUTPUT
+          else
+            echo "No release-artifacts/macos/dist folder"
+            ls -R release-artifacts || true
+            exit 1
+          fi
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
