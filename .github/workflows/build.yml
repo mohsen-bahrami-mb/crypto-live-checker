@@ -89,53 +89,45 @@ jobs:
       - name: Find Windows artifact
         id: find_windows
         run: |
-          if [ -d release-artifacts/windows/dist ]; then
-            file=$(find release-artifacts/windows/dist -type f -name "*.exe" | head -n1 || true)
-            if [ -z "$file" ]; then
-              echo "No Windows exe found in release-artifacts/windows/dist"
-              ls -R release-artifacts/windows || true
-              exit 1
-            fi
-            echo "asset_path=$file" >> $GITHUB_OUTPUT
-          else
-            echo "No release-artifacts/windows/dist folder"
-            ls -R release-artifacts || true
+          # prefer dist/ if present, otherwise look in the platform root
+          file=$(find release-artifacts/windows/dist -type f -name "*.exe" 2>/dev/null | head -n1 || true)
+          if [ -z "$file" ]; then
+            file=$(find release-artifacts/windows -maxdepth 1 -type f -name "*.exe" 2>/dev/null | head -n1 || true)
+          fi
+          if [ -z "$file" ]; then
+            echo "No Windows exe found in release-artifacts/windows or release-artifacts/windows/dist"
+            ls -R release-artifacts/windows || true
             exit 1
           fi
+          echo "asset_path=$file" >> $GITHUB_OUTPUT
 
       - name: Find Linux artifact
         id: find_linux
         run: |
-          if [ -d release-artifacts/linux/dist ]; then
-            file=$(find release-artifacts/linux/dist -maxdepth 1 -type f -name "crypto-check*" | head -n1 || true)
-            if [ -z "$file" ]; then
-              echo "No Linux binary found in release-artifacts/linux/dist"
-              ls -R release-artifacts/linux || true
-              exit 1
-            fi
-            echo "asset_path=$file" >> $GITHUB_OUTPUT
-          else
-            echo "No release-artifacts/linux/dist folder"
-            ls -R release-artifacts || true
+          file=$(find release-artifacts/linux/dist -maxdepth 1 -type f -name "crypto-check*" 2>/dev/null | head -n1 || true)
+          if [ -z "$file" ]; then
+            file=$(find release-artifacts/linux -maxdepth 1 -type f -name "crypto-check*" 2>/dev/null | head -n1 || true)
+          fi
+          if [ -z "$file" ]; then
+            echo "No Linux binary found in release-artifacts/linux or release-artifacts/linux/dist"
+            ls -R release-artifacts/linux || true
             exit 1
           fi
+          echo "asset_path=$file" >> $GITHUB_OUTPUT
 
       - name: Find macOS artifact
         id: find_macos
         run: |
-          if [ -d release-artifacts/macos/dist ]; then
-            file=$(find release-artifacts/macos/dist -maxdepth 1 -type f -name "crypto-check*" | head -n1 || true)
-            if [ -z "$file" ]; then
-              echo "No macOS binary found in release-artifacts/macos/dist"
-              ls -R release-artifacts/macos || true
-              exit 1
-            fi
-            echo "asset_path=$file" >> $GITHUB_OUTPUT
-          else
-            echo "No release-artifacts/macos/dist folder"
-            ls -R release-artifacts || true
+          file=$(find release-artifacts/macos/dist -maxdepth 1 -type f -name "crypto-check*" 2>/dev/null | head -n1 || true)
+          if [ -z "$file" ]; then
+            file=$(find release-artifacts/macos -maxdepth 1 -type f -name "crypto-check*" 2>/dev/null | head -n1 || true)
+          fi
+          if [ -z "$file" ]; then
+            echo "No macOS binary found in release-artifacts/macos or release-artifacts/macos/dist"
+            ls -R release-artifacts/macos || true
             exit 1
           fi
+          echo "asset_path=$file" >> $GITHUB_OUTPUT
 
       - name: Create Release
         id: create_release
@@ -153,7 +145,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: release-artifacts/windows/dist/crypto-check.exe
+          asset_path: ${{ steps.find_windows.outputs.asset_path }}
           asset_name: crypto-check-${{ github.ref_name }}-windows.exe
           asset_content_type: application/octet-stream
 
@@ -163,7 +155,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: release-artifacts/linux/dist/crypto-check
+          asset_path: ${{ steps.find_linux.outputs.asset_path }}
           asset_name: crypto-check-${{ github.ref_name }}-linux
           asset_content_type: application/octet-stream
 
@@ -173,6 +165,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: release-artifacts/macos/dist/crypto-check
+          asset_path: ${{ steps.find_macos.outputs.asset_path }}
           asset_name: crypto-check-${{ github.ref_name }}-macos
           asset_content_type: application/octet-stream
